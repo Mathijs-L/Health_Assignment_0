@@ -9,5 +9,44 @@ output: pdf_document
 
 
 
+```{r message=FALSE, warning=FALSE}
+library(tidyverse)
+library(readxl)
+library(knitr)
+library(kableExtra)
+library(ggrepel)
+library(brms)
+library(tidybayes)
+```
 
+
+```{r}
+
+cc <- read.csv("cc.csv") %>% 
+  select(Country, Year, Function, Value) %>%
+   spread(Function, Value) %>%
+  na.omit() %>%
+  rename(CR = `Curative and rehabilitative care`, AS = `Ancillary services (non-specified by function)`,
+         MG = `Medical goods (non-specified by function)`) %>%
+  mutate(cc = CR + MG + AS) %>%
+  select(country = Country, year = Year, cc)
+
+gdp <- read.csv("gdp.csv") %>%
+  select(country = Country, year = Year, gdp = Value) 
+
+le <- read.csv("Data/le.csv")%>%
+   select(country = Country, year = Year, le = Value) 
+
+pop <- read.csv("Data/pop.csv") %>%
+  select(country = Country, year = Year, population = Value)
+
+
+oecd1 <- full_join(cc, gdp, by = c("country", "year"))
+oecd2 <- full_join(oecd1, le, by = c("country", "year")) 
+
+oecd <- full_join(oecd2, pop, by = c("country", "year"))%>%
+  na.omit()
+
+oecd$year <- as.factor(oecd$year)
+```
 
