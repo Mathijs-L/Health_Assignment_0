@@ -13,10 +13,7 @@ output: pdf_document
 library(tidyverse)
 library(readxl)
 library(knitr)
-library(kableExtra)
-library(ggrepel)
-#library(brms)
-library(tidybayes)
+
 ```
 
 
@@ -52,6 +49,9 @@ oecd <- full_join(oecd2, pop, by = c("country", "year"))%>%
 oecd$year <- as.factor(oecd$year)
 ```
 
+For the Health expenditure per capita data I used OECD data measured in current prices and current PPP's.
+
+
 ```{r}
 df <- filter(oecd, year == 2016)
 countries <- unique(oecd$country)
@@ -61,7 +61,7 @@ EUdf <- filter(df, country %in% EUcountries)
 
 
 ```
-**Scenario 1
+# Scenario 1
 ```{r}
 HEnl <- EUdf$HEpc[EUdf$country == "Netherlands"]
 EUdf$graph1diff <- HEnl - EUdf$HEpc
@@ -82,7 +82,7 @@ ggplot(data = EUdf, aes(x = HEpc, y = le, label = country))+
 
 ```
 
-To calculate the allocation of extra expenditure we first sum the total extra cost and then calculate the allocation of extra expenditure. 
+### To calculate the allocation of extra expenditure we first sum the total extra cost and then calculate the allocation of extra expenditure. 
 
 ```{r}
 Scenario1costs <- sum(EUdf$graph1diff)
@@ -91,7 +91,7 @@ sumGDP <- sum(EUdf$gdp)
 EUdf$AOEESC1 <- (EUdf$gdp/sumGDP)*Scenario1costs
 ```
 
-To show which country will bear most of the extra costs in scenario 1 we plot the extra costs in a barchart below.
+### To show which country will bear most of the extra costs in scenario 1 we plot the extra costs in a barchart below.
 
 ```{r}
 ggplot(data = EUdf, aes(x=country, y=AOEESC1))+
@@ -107,7 +107,7 @@ ggplot(data = EUdf, aes(x=country, y=AOEESC1))+
 
 
 
-
+# Scenario 2
 
 ```{r}
 LEnl <- EUdf$le[EUdf$country == "Netherlands"]
@@ -120,8 +120,8 @@ EUdf$graph2diff <- ifelse(EUdf$graph2diff<=0,0,EUdf$graph2diff)
 
 ```
 
-**Graph 2
-```{r}
+
+```{r message=FALSE, results = "hide"}
 ggplot(data = EUdf, aes(x = le, y = HEpc, label = country))+
   geom_point(color = "blue")+
   geom_text(nudge_y = -100, size = 2)+
@@ -136,7 +136,7 @@ ggplot(data = EUdf, aes(x = le, y = HEpc, label = country))+
   theme_bw()
 ```
 
-Calculation of extra expenditure per country in scenario 2.
+### Calculation of extra expenditure per country in scenario 2.
 
 ```{r}
 Scenario2costs <- sum(EUdf$graph2diff)
