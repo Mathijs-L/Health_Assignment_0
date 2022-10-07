@@ -15,14 +15,14 @@ library(readxl)
 library(knitr)
 library(kableExtra)
 library(ggrepel)
-library(brms)
+#library(brms)
 library(tidybayes)
 ```
 
 
 ```{r}
 
-cc <- read.csv("cc.csv") %>% 
+cc <- read.csv("Data/cc.csv") %>% 
   select(Country, Year, Function, Value) %>%
    spread(Function, Value) %>%
   na.omit() %>%
@@ -31,7 +31,7 @@ cc <- read.csv("cc.csv") %>%
   mutate(cc = CR + MG + AS) %>%
   select(country = Country, year = Year, cc)
 
-gdp <- read.csv("gdp.csv") %>%
+gdp <- read.csv("Data/gdp.csv") %>%
   select(country = Country, year = Year, gdp = Value) 
 
 le <- read.csv("Data/le.csv")%>%
@@ -40,8 +40,10 @@ le <- read.csv("Data/le.csv")%>%
 pop <- read.csv("Data/pop.csv") %>%
   select(country = Country, year = Year, population = Value)
 
+HEpc <- read.csv("Data/HEpercapita.csv") %>%
+  select(country = Country, year = Year, HEpc = Value)
 
-oecd1 <- full_join(cc, gdp, by = c("country", "year"))
+oecd1 <- full_join(HEpc, gdp, by = c("country", "year"))
 oecd2 <- full_join(oecd1, le, by = c("country", "year")) 
 
 oecd <- full_join(oecd2, pop, by = c("country", "year"))%>%
@@ -49,4 +51,32 @@ oecd <- full_join(oecd2, pop, by = c("country", "year"))%>%
 
 oecd$year <- as.factor(oecd$year)
 ```
+
+```{r}
+df <- filter(oecd, year == 2016)
+countries <- unique(oecd$country)
+EUcountries <- list("Austria","Belgium","Bulgaria","Croatia" ,"Cyprus" ,"Czech Republic","Denmark","Estonia",         "Finland","France","Germany","Greece" , "Hungary" ,"Iceland","Ireland","Italy","Latvia","Lithuania","Luxembourg","Netherlands", "Poland","Portugal", "Romania" ,"Slovak Republic" ,"Slovenia" , "Spain", "Sweden",  "United Kingdom" )
+
+EUdf <- filter(df, country %in% EUcountries)
+
+
+```
+
+```{r}
+HEnl <- EUdf$HEpc[EUdf$country == "Netherlands"]
+
+ggplot(data = EUdf, aes(x = HEpc, y = le, label = country))+
+  geom_point(color = "blue")+
+  geom_text(nudge_y = 0.3, size = 2)+
+  labs(x = "Health Expenditure per capita", y = "Life Expectancy at birth")+
+  geom_segment(aes(x = HEnl,
+                   y = le,
+                   yend = le,
+                   xend = HEpc),
+               color = 'darkgreen')+
+  geom_vline(xintercept = HEnl, color = "black", linetype = "longdash")
+
+```
+
+
 
