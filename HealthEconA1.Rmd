@@ -61,22 +61,97 @@ EUdf <- filter(df, country %in% EUcountries)
 
 
 ```
-
+**Scenario 1
 ```{r}
 HEnl <- EUdf$HEpc[EUdf$country == "Netherlands"]
+EUdf$graph1diff <- HEnl - EUdf$HEpc
+EUdf$graph1diff <- ifelse(EUdf$graph1diff>=0,EUdf$graph1diff,0)
+
 
 ggplot(data = EUdf, aes(x = HEpc, y = le, label = country))+
   geom_point(color = "blue")+
   geom_text(nudge_y = 0.3, size = 2)+
-  labs(x = "Health Expenditure per capita", y = "Life Expectancy at birth")+
+  labs(x = "Health Expenditure per capita (2016) $PPP", y = "Life Expectancy at birth", caption = "Source OECD, year 2016")+
   geom_segment(aes(x = HEnl,
                    y = le,
                    yend = le,
-                   xend = HEpc),
+                   xend = ifelse(HEpc<=HEnl,HEpc,HEnl)),
                color = 'darkgreen')+
-  geom_vline(xintercept = HEnl, color = "black", linetype = "longdash")
+  geom_vline(xintercept = HEnl, color = "black", linetype = "longdash")+
+  theme_bw()
 
 ```
 
+To calculate the allocation of extra expenditure we first sum the total extra cost and then calculate the allocation of extra expenditure. 
 
+```{r}
+Scenario1costs <- sum(EUdf$graph1diff)
+sumGDP <- sum(EUdf$gdp)
+#Allocation of extra expenditure in scenario 1 --> AOEESC1
+EUdf$AOEESC1 <- (EUdf$gdp/sumGDP)*Scenario1costs
+```
+
+To show which country will bear most of the extra costs in scenario 1 we plot the extra costs in a barchart below.
+
+```{r}
+ggplot(data = EUdf, aes(x=country, y=AOEESC1))+
+  geom_bar(stat = "identity")+
+  labs(y = "Allocation of extra expenditure in $")+
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.2, hjust=1))
+```
+
+
+
+
+
+
+
+
+
+
+```{r}
+LEnl <- EUdf$le[EUdf$country == "Netherlands"]
+
+model_1 <- lm(HEpc ~ le, data = EUdf)
+coeff <- model_1$coefficients[2]
+EUdf$graph2diff <- (LEnl - EUdf$le)*coeff
+EUdf$graph2diff <- ifelse(EUdf$graph2diff<=0,0,EUdf$graph2diff)
+
+
+```
+
+**Graph 2
+```{r}
+ggplot(data = EUdf, aes(x = le, y = HEpc, label = country))+
+  geom_point(color = "blue")+
+  geom_text(nudge_y = -100, size = 2)+
+  labs(x = "Life Expectancy at birth" , y = "Health Expenditure per capita (2016) $PPP", caption = "Source OECD, year 2016")+
+  geom_segment(aes(x = le,
+                   y = HEpc,
+                   yend = graph2diff+HEpc,
+                   xend = le),
+               color = 'darkgreen')+
+  geom_vline(xintercept = LEnl, color = "black", linetype = "longdash")+
+  stat_smooth(method="lm", se = FALSE)
+  theme_bw()
+```
+
+Calculation of extra expenditure per country in scenario 2.
+
+```{r}
+Scenario2costs <- sum(EUdf$graph2diff)
+
+#Allocation of extra expenditure in scenario 2 --> AOEESC2
+EUdf$AOEESC2 <- (EUdf$gdp/sumGDP)*Scenario2costs
+```
+
+
+To show which country will bear most of the extra costs in scenario 1 we plot the extra costs in a barchart below.
+The barchart distribution is the same as in scenario 1 as the share of gdp has not changed, but the values have changed due to the difference in total extra expenditure.
+```{r}
+ggplot(data = EUdf, aes(x=country, y=AOEESC2))+
+  geom_bar(stat = "identity")+
+  labs(y = "Allocation of extra expenditure in $")+
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.2, hjust=1))
+```
 
