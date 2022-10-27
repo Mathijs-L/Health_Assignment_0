@@ -1,4 +1,4 @@
-# Seminar Health Economics R Assignment 1
+# Seminar Health Economics R Assignment 0
 
 Calculation on costs of an EU wide Health plan.
 
